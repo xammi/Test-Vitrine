@@ -1,8 +1,22 @@
 # encoding: utf-8
 from django.db import models
+from datetime import datetime
 
 
-class User(models.Model):
+class JsonMixin:
+    def as_json(self):
+        result = {}
+        for field in self._meta.get_fields():
+            if hasattr(field, 'column'):
+                result[field.name] = self.__dict__[field.name]
+
+        for key in result:
+            if isinstance(result[key], datetime):
+                result[key] = result[key].isoformat()
+        return result
+
+
+class User(models.Model, JsonMixin):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'пользователи'
@@ -30,7 +44,7 @@ class User(models.Model):
         return self.get_short_name()
 
 
-class Visit(models.Model):
+class Visit(models.Model, JsonMixin):
     class Meta:
         verbose_name = 'посещение'
         verbose_name_plural = 'посещения'
@@ -43,7 +57,7 @@ class Visit(models.Model):
         return 'Посещение ID={}'.format(self.id)
 
 
-class Location(models.Model):
+class Location(models.Model, JsonMixin):
     class Meta:
         verbose_name = 'место'
         verbose_name_plural = 'места'
