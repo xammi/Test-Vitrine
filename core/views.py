@@ -22,10 +22,16 @@ class JsonCreateView(View):
         form = self.form_class(params)
         if form.is_valid():
             instance = form.save()
-            return JsonResponse(instance.as_json(), safe=False)
+            response_data = {
+                'status': 'OK',
+                'data': instance.as_json()
+            }
         else:
-            errors = {k: v for k, v in form.errors.items()}
-            return JsonResponse(errors, safe=False)
+            response_data = {
+                'status': 'ERROR',
+                'errors': {k: v for k, v in form.errors.items()}
+            }
+        return JsonResponse(response_data, safe=False)
 
 
 class UserView(JsonCreateView):
@@ -42,6 +48,10 @@ class UserView(JsonCreateView):
 
 
 class LocationView(JsonCreateView):
+    """
+    curl -X post 'http://127.0.0.1:8000/location/' -H 'Content-Type: application/json' -d '{"country": "Россия", "city": "Москва", "place": "Москва-сити"}'
+    """
+
     class CreateLocationForm(forms.ModelForm):
         class Meta:
             model = Location
@@ -51,6 +61,10 @@ class LocationView(JsonCreateView):
 
 
 class VisitView(JsonCreateView):
+    """
+    curl -X post 'http://127.0.0.1:8000/visit/' -H 'Content-Type: application/json' -d '{"user_id": 1, "location_id": 1}'
+    """
+
     class CreateVisitForm(forms.ModelForm):
         class Meta:
             model = Visit

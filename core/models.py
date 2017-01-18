@@ -1,22 +1,8 @@
 # encoding: utf-8
 from django.db import models
-from datetime import datetime
 
 
-class JsonMixin:
-    def as_json(self):
-        result = {}
-        for field in self._meta.get_fields():
-            if hasattr(field, 'column'):
-                result[field.name] = self.__dict__[field.name]
-
-        for key in result:
-            if isinstance(result[key], datetime):
-                result[key] = result[key].isoformat()
-        return result
-
-
-class User(models.Model, JsonMixin):
+class User(models.Model):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'пользователи'
@@ -40,11 +26,22 @@ class User(models.Model, JsonMixin):
             result += ' ' + self.last_name
         return result
 
-    def __unicode__(self):
+    def __str__(self):
         return self.get_short_name()
 
+    def as_json(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'birth_date': self.birth_date,
+            'is_active': self.is_active,
+            'registered': self.registered,
+        }
 
-class Visit(models.Model, JsonMixin):
+
+class Visit(models.Model):
     class Meta:
         verbose_name = 'посещение'
         verbose_name_plural = 'посещения'
@@ -53,11 +50,19 @@ class Visit(models.Model, JsonMixin):
     user = models.ForeignKey('User', verbose_name='Кто?')
     visited_at = models.DateTimeField(verbose_name='Когда?')
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Посещение ID={}'.format(self.id)
 
+    def as_json(self):
+        return {
+            'id': self.id,
+            'location': str(self.location),
+            'user': str(self.user),
+            'visited_at': self.visited_at.isoformat(),
+        }
 
-class Location(models.Model, JsonMixin):
+
+class Location(models.Model):
     class Meta:
         verbose_name = 'место'
         verbose_name_plural = 'места'
@@ -66,5 +71,13 @@ class Location(models.Model, JsonMixin):
     city = models.CharField(verbose_name='Город', max_length=200, null=True, blank=True)
     place = models.CharField(verbose_name='Название', max_length=255)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.place
+
+    def as_json(self):
+        return {
+            'id': self.id,
+            'country': self.country,
+            'city': self.city,
+            'place': self.place,
+        }
