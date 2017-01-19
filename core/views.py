@@ -10,13 +10,14 @@ from django import forms
 from core.models import Location, User, Visit
 
 
-cache_limit = 500
+default_cache_limit = 200
 insert_cache = []
 
 
 class JsonCreateView(View):
     http_method_names = ['post']
     form_class = None
+    cache_limit = default_cache_limit
 
     def extract_params(self, request):
         if request.POST:
@@ -36,7 +37,7 @@ class JsonCreateView(View):
         if form.is_valid():
             instance = form.save(commit=False)
             insert_cache.append(instance)
-            if flush == 'False' and len(insert_cache) < cache_limit:
+            if flush == 'False' and len(insert_cache) < self.cache_limit:
                 response_data = {'status': 'WAIT'}
             else:
                 ids = []
@@ -109,3 +110,7 @@ class VisitView(JsonCreateView):
             return instance
 
     form_class = CreateVisitForm
+    cache_limit = 400
+
+
+# --------------------------------------------------------------------------------------------------

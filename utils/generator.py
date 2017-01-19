@@ -65,6 +65,7 @@ def generate_users(amount):
         email = translit(name[0].lower() + '.' + surname) + '@' + choice(email_domen)
         while email in emails:
             email = choice(string.ascii_lowercase) + email
+        emails.append(email)
 
         birth_date = random_date(datetime(year=1900, month=1, day=1), datetime(year=2010, month=1, day=1))
         user_data = {
@@ -76,12 +77,12 @@ def generate_users(amount):
         }
         resp_data = send_data(users_route, user_data)
         if resp_data:
-            emails.append(email)
             global user_ids
             user_ids += resp_data
-            if i % 100 == 0:
-                sys.stdout.write('+')
-                sys.stdout.flush()
+
+        if i % 100 == 0:
+            sys.stdout.write('+')
+            sys.stdout.flush()
 
 
 def generate_locations(amount):
@@ -101,9 +102,10 @@ def generate_locations(amount):
         if resp_data:
             global location_ids
             location_ids += resp_data
-            if i % 100 == 0:
-                sys.stdout.write('+')
-                sys.stdout.flush()
+
+        if i % 100 == 0:
+            sys.stdout.write('+')
+            sys.stdout.flush()
 
 
 def generate_visits(amount):
@@ -126,8 +128,10 @@ def generate_visits(amount):
 
 
 if __name__ == '__main__':
-    amount = 100
+    amount = 1000
+    print(datetime.now())
     generate_users(amount)
     generate_locations(amount)
     if user_ids and location_ids:
         generate_visits(amount * 10)
+    print(datetime.now())
