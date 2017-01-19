@@ -72,7 +72,7 @@ class Location(models.Model):
     place = models.CharField(verbose_name='Название', max_length=255)
 
     def __str__(self):
-        return self.place
+        return (self.city or self.country) + ', ' + self.place
 
     def as_json(self):
         return {

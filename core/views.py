@@ -12,10 +12,15 @@ class JsonCreateView(View):
     form_class = None
 
     def extract_params(self, request):
+        if request.POST:
+            return request.POST
         body = {}
         if request.body:
-            body = json.loads(request.body.decode("utf-8"))
-        return request.POST if request.POST else body
+            try:
+                body = json.loads(request.body.decode("utf-8"))
+            except Exception:
+                return {}
+        return body
 
     def post(self, request, *args, **kwargs):
         params = self.extract_params(request)
