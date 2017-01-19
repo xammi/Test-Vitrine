@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+import pytz
 from django.db import transaction
 from django.http import JsonResponse
 from django.views import View
@@ -41,8 +42,11 @@ class JsonCreateView(View):
                 ids = []
                 with transaction.atomic():
                     for instance in insert_cache:
-                        instance.save()
-                        ids.append(instance.id)
+                        try:
+                            instance.save()
+                            ids.append(instance.id)
+                        except Exception:
+                            pass
                     insert_cache.clear()
                 response_data = {'status': 'OK', 'data': ids}
         else:
@@ -93,7 +97,7 @@ class VisitView(JsonCreateView):
             self.cleaned_data = {
                 'user_id': int(self.data['user']),
                 'location_id': int(self.data['location']),
-                'visited_at': datetime.strptime(self.data['visited_at'], '%Y-%m-%d %H:%M:%S'),
+                'visited_at': datetime.strptime(self.data['visited_at'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.UTC),
             }
 
         def save(self, commit=True):

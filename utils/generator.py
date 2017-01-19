@@ -77,7 +77,8 @@ def generate_users(amount):
         resp_data = send_data(users_route, user_data)
         if resp_data:
             emails.append(email)
-            user_ids.append(resp_data)
+            global user_ids
+            user_ids += resp_data
             if i % 100 == 0:
                 sys.stdout.write('+')
                 sys.stdout.flush()
@@ -98,7 +99,8 @@ def generate_locations(amount):
         }
         resp_data = send_data(locations_route, location_data)
         if resp_data:
-            location_ids.append(resp_data)
+            global location_ids
+            location_ids += resp_data
             if i % 100 == 0:
                 sys.stdout.write('+')
                 sys.stdout.flush()
