@@ -56,9 +56,9 @@ class Visit(models.Model):
     def as_json(self):
         return {
             'id': self.id,
-            'location': str(self.location),
-            'user': str(self.user),
-            'visited_at': self.visited_at.isoformat(),
+            'location': self.location_id,
+            'user': self.user_id,
+            # 'visited_at': self.visited_at.isoformat(),
         }
 
 

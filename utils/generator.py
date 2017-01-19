@@ -2,6 +2,7 @@ import requests
 from requests.exceptions import ConnectionError
 import sys
 import json
+import string
 from datetime import timedelta, datetime
 from random import choice, randrange
 from utils.constants import *
@@ -26,15 +27,18 @@ location_ids = []
 service_route = 'http://127.0.0.1:8000/'
 
 
-def send_data(route, data):
+def send_data(route, data, parse=True):
     try:
         response = requests.post(route, data=data)
         if response.status_code == 200:
+            if not parse:
+                return None
             resp_data = json.loads(response.text)
-            if resp_data.get('status', '') == 'OK':
+            status = resp_data.get('status', '')
+            if status == 'OK':
                 return resp_data.get('data', None)
-            else:
-                pass
+            elif status == 'WAIT':
+                return None
         else:
             pass
     except ConnectionError:
@@ -59,20 +63,21 @@ def generate_users(amount):
             surname = choice(surname_prefix) + choice(surname_root) + choice(surname_suffix_female)
 
         email = translit(name[0].lower() + '.' + surname) + '@' + choice(email_domen)
-        if email in emails:
-            email = choice(translate.values()) + email
+        while email in emails:
+            email = choice(string.ascii_lowercase) + email
 
         birth_date = random_date(datetime(year=1900, month=1, day=1), datetime(year=2010, month=1, day=1))
         user_data = {
             'email': email,
             'first_name': name,
             'last_name': surname.capitalize(),
-            'birth_date': birth_date
+            'birth_date': birth_date,
+            'flush': i + 1 == amount,
         }
         resp_data = send_data(users_route, user_data)
-        if resp_data and 'id' in resp_data:
+        if resp_data:
             emails.append(email)
-            user_ids.append(resp_data['id'])
+            user_ids.append(resp_data)
             if i % 100 == 0:
                 sys.stdout.write('+')
                 sys.stdout.flush()
@@ -89,10 +94,11 @@ def generate_locations(amount):
             'country': country,
             'city': city.capitalize(),
             'place': place.capitalize(),
+            'flush': i + 1 == amount,
         }
         resp_data = send_data(locations_route, location_data)
-        if resp_data and 'id' in resp_data:
-            location_ids.append(resp_data['id'])
+        if resp_data:
+            location_ids.append(resp_data)
             if i % 100 == 0:
                 sys.stdout.write('+')
                 sys.stdout.flush()
@@ -109,15 +115,17 @@ def generate_visits(amount):
             'location': location,
             'user': user,
             'visited_at': visited_at,
+            'flush': i + 1 == amount,
         }
-        resp_data = send_data(visit_route, visit_data)
-        if resp_data:
-            if i % 1000 == 0:
-                sys.stdout.write('+')
-                sys.stdout.flush()
+        send_data(visit_route, visit_data, parse=False)
+        if i % 1000 == 0:
+            sys.stdout.write('+')
+            sys.stdout.flush()
 
 
 if __name__ == '__main__':
-    generate_users(10000)
-    generate_locations(10000)
-    generate_visits(100000)
+    amount = 100
+    generate_users(amount)
+    generate_locations(amount)
+    if user_ids and location_ids:
+        generate_visits(amount * 10)

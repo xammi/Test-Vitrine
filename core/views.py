@@ -1,10 +1,16 @@
 import json
+from datetime import datetime
 
+from django.db import transaction
 from django.http import JsonResponse
 from django.views import View
 from django import forms
 
 from core.models import Location, User, Visit
+
+
+cache_limit = 500
+insert_cache = []
 
 
 class JsonCreateView(View):
@@ -25,12 +31,20 @@ class JsonCreateView(View):
     def post(self, request, *args, **kwargs):
         params = self.extract_params(request)
         form = self.form_class(params)
+        flush = request.POST.get('flush', 'False')
         if form.is_valid():
-            instance = form.save()
-            response_data = {
-                'status': 'OK',
-                'data': instance.as_json()
-            }
+            instance = form.save(commit=False)
+            insert_cache.append(instance)
+            if flush == 'False' and len(insert_cache) < cache_limit:
+                response_data = {'status': 'WAIT'}
+            else:
+                ids = []
+                with transaction.atomic():
+                    for instance in insert_cache:
+                        instance.save()
+                        ids.append(instance.id)
+                    insert_cache.clear()
+                response_data = {'status': 'OK', 'data': ids}
         else:
             response_data = {
                 'status': 'ERROR',
@@ -74,5 +88,20 @@ class VisitView(JsonCreateView):
         class Meta:
             model = Visit
             fields = ['location', 'user', 'visited_at']
+
+        def full_clean(self):
+            self.cleaned_data = {
+                'user_id': int(self.data['user']),
+                'location_id': int(self.data['location']),
+                'visited_at': datetime.strptime(self.data['visited_at'], '%Y-%m-%d %H:%M:%S'),
+            }
+
+        def save(self, commit=True):
+            instance = Visit(user_id=self.cleaned_data['user_id'],
+                             location_id=self.cleaned_data['location_id'],
+                             visited_at=self.cleaned_data['visited_at'])
+            if commit:
+                instance.save()
+            return instance
 
     form_class = CreateVisitForm
