@@ -1,11 +1,13 @@
-import requests
-from requests.exceptions import ConnectionError
-import sys
 import json
 import string
+import sys
 from datetime import timedelta, datetime
 from random import choice, randrange
-from utils.constants import *
+
+import requests
+from requests.exceptions import ConnectionError
+
+from .constants import *
 
 
 def translit(seq):

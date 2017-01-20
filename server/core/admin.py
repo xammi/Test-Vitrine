@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.models import User, Location, Visit
+from .models import User, Location, Visit
 
 
 @admin.register(User)

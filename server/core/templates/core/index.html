@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Index</title>
+</head>
+<body>
+    <h3>Hello people!</h3>
+    <ol>
+        {% for user in users %}
+            <li>{{ user.email }}</li>
+        {% empty %}
+            <h4>No users yet</h4>
+        {% endfor %}
+    </ol>
+</body>
+</html>
